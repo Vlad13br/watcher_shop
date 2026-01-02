@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Providers;
+
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
+use Illuminate\Http\Request;
+
+class RouteServiceProvider extends ServiceProvider
+{
+    public function boot()
+    {
+        $this->configureRateLimiting();
+
+        $this->routes(function () {
+            require base_path('routes/web.php');
+            require base_path('routes/auth.php');
+        });
+    }
+
+    protected function configureRateLimiting()
+    {
+        // Ліміт спроб входу
+        RateLimiter::for('login', function (Request $request) {
+            return Limit::perMinute(5)->by($request->ip());
+        });
+
+        // Глобальний ліміт для IP
+        RateLimiter::for('global', function (Request $request) {
+            return Limit::perMinute(100)->by($request->ip());
+        });
+    }
+}
